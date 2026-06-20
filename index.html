@@ -84,23 +84,91 @@ button:hover {
     background: #1d4ed8;
 }
 
+.toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.table-wrapper {
+    max-width: 100%;
+    max-height: 62vh;
+    border-radius: 14px;
+    background: #ffffff;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.table-wrapper::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
 table {
     width: 100%;
-    margin-top: 18px;
-    border-collapse: collapse;
+    margin-top: 0;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: 13px;
 }
 
+thead {
+    display: table-header-group;
+}
+
+thead th {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f9fafb;
+}
+
 th, td {
-    padding: 8px;
+    padding: 10px 12px;
     text-align: right;
     border-bottom: 1px solid #e5e7eb;
 }
 
+@media (max-width: 760px) {
+    table {
+        font-size: 12px;
+    }
+    th, td {
+        padding: 8px 10px;
+        text-align: left;
+    }
+    .year-row td {
+        white-space: normal;
+    }
+}
+
 th {
     background: #f9fafb;
-    position: sticky;
-    top: 0;
+}
+
+.toggle-icon {
+    display: inline-block;
+    width: 18px;
+    text-align: center;
+    margin-right: 6px;
+    color: #2563eb;
+}
+
+.downpayment-row input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+}
+
+tfoot tr {
+    background: #f3f4f6;
+    font-weight: 700;
 }
 
 .year-row {
@@ -151,8 +219,11 @@ th {
 
 </div>
 
-<button onclick="calculate()">Calculate</button>
+<div class="toolbar">
+    <button id="toggleAll">Expand All</button>
+</div>
 
+<div class="table-wrapper">
 <table>
 <thead>
 <tr>
@@ -160,46 +231,86 @@ th {
 <th>Payment</th>
 <th>Interest</th>
 <th>Principal</th>
-<th>Tax</th>
+<th>Tax Return</th>
 <th>Net</th>
 <th>Equity</th>
-<th>Balance</th>
+<th>Remaining Principal</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
+<tfoot>
+<tr>
+<th>Total</th>
+<td id="totalPayment"></td>
+<td id="totalInterest"></td>
+<td id="totalPrincipal"></td>
+<td id="totalTax"></td>
+<td id="totalNet"></td>
+<td id="totalEquity"></td>
+<td id="totalBalance"></td>
+</tr>
+</tfoot>
 </table>
+</div>
 
 </div>
 </div>
 
 <script>
 
+let allYearsExpanded = false;
+let yearOpenStates = {};
+let annualDownPayments = {};
+
 function calculate() {
+    const activeElement = document.activeElement;
+    const focusedYear = activeElement instanceof HTMLInputElement && activeElement.classList.contains('downpayment-input')
+        ? activeElement.dataset.year
+        : null;
+    const focusedValue = activeElement instanceof HTMLInputElement && activeElement.classList.contains('downpayment-input')
+        ? activeElement.value
+        : null;
+    const selectionStart = activeElement instanceof HTMLInputElement ? activeElement.selectionStart : null;
+    const selectionEnd = activeElement instanceof HTMLInputElement ? activeElement.selectionEnd : null;
 
     let loan = +document.getElementById("loan").value;
-    let rate = (+document.getElementById("rate").value)/100/12;
+    let rate = (+document.getElementById("rate").value) / 100 / 12;
     let years = +document.getElementById("years").value;
-    let taxRate = (+document.getElementById("taxRate").value)/100;
+    let taxRate = (+document.getElementById("taxRate").value) / 100;
+
+    if (!loan || years <= 0) {
+        document.getElementById("tbody").innerHTML = "";
+        updateTotals(0,0,0,0,0,0,0);
+        return;
+    }
 
     let n = years * 12;
-    let payment = loan * rate / (1 - Math.pow(1 + rate, -n));
+    let payment = rate === 0 ? loan / n : loan * rate / (1 - Math.pow(1 + rate, -n));
 
     let balance = loan;
+    let totalPayment = 0;
+    let totalInterest = 0;
+    let totalPrincipal = 0;
+    let totalTax = 0;
+    let totalNet = 0;
+    let totalEquity = 0;
+
     let tbody = document.getElementById("tbody");
     tbody.innerHTML = "";
 
     for (let y = 1; y <= years; y++) {
-
         let yearInterest = 0, yearPrincipal = 0, yearTax = 0;
         let yearId = "y" + y;
 
+        let isOpen = allYearsExpanded || yearOpenStates[yearId] === true;
         let header = document.createElement("tr");
         header.className = "year-row";
-        header.dataset.open = "0";
+        header.dataset.open = isOpen ? "1" : "0";
+        header.dataset.year = yearId;
 
         header.innerHTML = `
-            <td>▶ Year ${y}</td>
-            <td>${(payment*12).toFixed(0)}</td>
+            <td><span class="toggle-icon">${isOpen ? '▾' : '▸'}</span>Year ${y}</td>
+            <td>${(payment * 12).toFixed(0)}</td>
             <td id="i${y}"></td>
             <td id="p${y}"></td>
             <td id="t${y}" class="tax"></td>
@@ -209,22 +320,13 @@ function calculate() {
         `;
 
         header.onclick = () => {
-
             let open = header.dataset.open === "1";
-            header.dataset.open = open ? "0" : "1";
-
-            header.firstElementChild.textContent =
-                (open ? "▶ " : "▼ ") + `Year ${y}`;
-
-            document.querySelectorAll("." + yearId).forEach(r => {
-                r.style.display = open ? "none" : "table-row";
-            });
+            setYearOpen(header, !open);
         };
 
         tbody.appendChild(header);
 
         for (let m = 1; m <= 12; m++) {
-
             let interest = balance * rate;
             let principal = payment - interest;
             balance -= principal;
@@ -236,11 +338,19 @@ function calculate() {
             yearPrincipal += principal;
             yearTax += tax;
 
+            totalPayment += payment;
+            totalInterest += interest;
+            totalPrincipal += principal;
+            totalTax += tax;
+            totalNet += net;
+            totalEquity += (loan - balance);
+
             let row = document.createElement("tr");
             row.className = "month-row " + yearId;
+            row.style.display = isOpen ? "table-row" : "none";
 
             row.innerHTML = `
-                <td>Month ${(y-1)*12 + m}</td>
+                <td>Month ${(y - 1) * 12 + m}</td>
                 <td>${payment.toFixed(2)}</td>
                 <td>${interest.toFixed(2)}</td>
                 <td>${principal.toFixed(2)}</td>
@@ -253,17 +363,101 @@ function calculate() {
             tbody.appendChild(row);
         }
 
-        document.getElementById("i"+y).innerText = yearInterest.toFixed(0);
-        document.getElementById("p"+y).innerText = yearPrincipal.toFixed(0);
-        document.getElementById("t"+y).innerText = yearTax.toFixed(0);
-        document.getElementById("n"+y).innerText =
-            (payment*12 - yearTax).toFixed(0);
-        document.getElementById("e"+y).innerText =
-            (loan - balance).toFixed(0);
-        document.getElementById("b"+y).innerText =
-            balance.toFixed(0);
+        let extraPayment = Math.max(0, annualDownPayments[yearId] || 0);
+        if (extraPayment > 0) {
+            extraPayment = Math.min(extraPayment, balance);
+            balance -= extraPayment;
+        }
+
+        let extraRow = document.createElement("tr");
+        extraRow.className = "month-row downpayment-row " + yearId;
+        extraRow.style.display = isOpen ? "table-row" : "none";
+        extraRow.innerHTML = `
+            <td colspan="2">Extra Payment in Year ${y}:</td>
+            <td colspan="6"><input type="text" inputmode="numeric" pattern="[0-9]*" data-year="${yearId}" class="downpayment-input" value="${Math.round(extraPayment)}"></td>
+        `;
+        tbody.appendChild(extraRow);
+
+        const extraInput = extraRow.querySelector('input');
+        let pendingCalculateFrame = null;
+        extraInput.addEventListener('input', event => {
+            const rawValue = event.target.value.replace(/\D/g, '');
+            event.target.value = rawValue;
+            annualDownPayments[yearId] = rawValue ? parseInt(rawValue, 10) : 0;
+            if (pendingCalculateFrame !== null) {
+                cancelAnimationFrame(pendingCalculateFrame);
+            }
+            pendingCalculateFrame = requestAnimationFrame(() => {
+                pendingCalculateFrame = null;
+                calculate();
+            });
+        });
+        if (focusedYear === yearId && focusedValue !== null) {
+            extraInput.value = focusedValue.replace(/\D/g, '');
+            window.requestAnimationFrame(() => {
+                extraInput.focus();
+                if (selectionStart !== null && selectionEnd !== null) {
+                    extraInput.setSelectionRange(selectionStart, selectionEnd);
+                }
+            });
+        }
+
+        document.getElementById("i" + y).innerText = yearInterest.toFixed(0);
+        document.getElementById("p" + y).innerText = yearPrincipal.toFixed(0);
+        document.getElementById("t" + y).innerText = yearTax.toFixed(0);
+        document.getElementById("n" + y).innerText = (payment * 12 - yearTax).toFixed(0);
+        document.getElementById("e" + y).innerText = (loan - balance).toFixed(0);
+        document.getElementById("b" + y).innerText = balance.toFixed(0);
     }
+
+    updateTotals(totalPayment, totalInterest, totalPrincipal, totalTax, totalNet, totalEquity, balance);
 }
+
+function updateTotals(payment, interest, principal, tax, net, equity, balance) {
+    document.getElementById('totalPayment').innerText = payment.toFixed(2);
+    document.getElementById('totalInterest').innerText = interest.toFixed(2);
+    document.getElementById('totalPrincipal').innerText = principal.toFixed(2);
+    document.getElementById('totalTax').innerText = tax.toFixed(2);
+    document.getElementById('totalNet').innerText = net.toFixed(2);
+    document.getElementById('totalEquity').innerText = equity.toFixed(2);
+    document.getElementById('totalBalance').innerText = balance.toFixed(2);
+}
+
+function setYearOpen(header, open) {
+    header.dataset.open = open ? "1" : "0";
+    const icon = header.querySelector(".toggle-icon");
+    if (icon) {
+        icon.textContent = open ? '▾' : '▸';
+    }
+    const yearId = header.dataset.year;
+    yearOpenStates[yearId] = open;
+    if (!open) {
+        allYearsExpanded = false;
+        document.getElementById('toggleAll').textContent = 'Expand All';
+    }
+    document.querySelectorAll("tr.month-row." + yearId).forEach(r => {
+        r.style.display = open ? "table-row" : "none";
+    });
+}
+
+function toggleAllYears() {
+    allYearsExpanded = !allYearsExpanded;
+    document.querySelectorAll('.year-row').forEach(header => {
+        setYearOpen(header, allYearsExpanded);
+    });
+    document.querySelectorAll('.year-row').forEach(header => {
+        yearOpenStates[header.dataset.year] = allYearsExpanded;
+    });
+    document.getElementById('toggleAll').textContent = allYearsExpanded ? 'Collapse All' : 'Expand All';
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('#loan, #rate, #years, #taxRate').forEach(input => {
+        input.addEventListener('input', calculate);
+    });
+    document.getElementById('toggleAll').addEventListener('click', toggleAllYears);
+    calculate();
+});
 
 </script>
 
