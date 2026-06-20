@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Mortgage Calculator</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f6f8;
+    color: #1f2937;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+h2 {
+    margin-top: 0;
+}
+
+.inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-size: 12px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+input {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    outline: none;
+}
+
+input:focus {
+    border-color: #3b82f6;
+}
+
+/* remove spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+button {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+table {
+    width: 100%;
+    margin-top: 18px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+th, td {
+    padding: 8px;
+    text-align: right;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+    background: #f9fafb;
+    position: sticky;
+    top: 0;
+}
+
+.year-row {
+    background: #eef2ff;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.month-row {
+    display: none;
+}
+
+.tax { color: #059669; }
+.net { color: #b45309; }
+.equity { color: #1d4ed8; }
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+<div class="card">
+
+<h2>Mortgage Calculator</h2>
+
+<div class="inputs">
+
+<div class="input-group">
+<label>Loan (€)</label>
+<input type="number" id="loan" value="600000">
+</div>
+
+<div class="input-group">
+<label>Interest (%)</label>
+<input type="number" id="rate" value="4.17" step="0.01">
+</div>
+
+<div class="input-group">
+<label>Years</label>
+<input type="number" id="years" value="30">
+</div>
+
+<div class="input-group">
+<label>Tax return (%)</label>
+<input type="number" id="taxRate" value="36.97" step="0.01">
+</div>
+
+</div>
+
+<button onclick="calculate()">Calculate</button>
+
+<table>
+<thead>
+<tr>
+<th>Period</th>
+<th>Payment</th>
+<th>Interest</th>
+<th>Principal</th>
+<th>Tax</th>
+<th>Net</th>
+<th>Equity</th>
+<th>Balance</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+</div>
+</div>
+
+<script>
+
+function calculate() {
+
+    let loan = +document.getElementById("loan").value;
+    let rate = (+document.getElementById("rate").value)/100/12;
+    let years = +document.getElementById("years").value;
+    let taxRate = (+document.getElementById("taxRate").value)/100;
+
+    let n = years * 12;
+    let payment = loan * rate / (1 - Math.pow(1 + rate, -n));
+
+    let balance = loan;
+    let tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    for (let y = 1; y <= years; y++) {
+
+        let yearInterest = 0, yearPrincipal = 0, yearTax = 0;
+        let yearId = "y" + y;
+
+        let header = document.createElement("tr");
+        header.className = "year-row";
+        header.dataset.open = "0";
+
+        header.innerHTML = `
+            <td>▶ Year ${y}</td>
+            <td>${(payment*12).toFixed(0)}</td>
+            <td id="i${y}"></td>
+            <td id="p${y}"></td>
+            <td id="t${y}" class="tax"></td>
+            <td id="n${y}" class="net"></td>
+            <td id="e${y}" class="equity"></td>
+            <td id="b${y}"></td>
+        `;
+
+        header.onclick = () => {
+
+            let open = header.dataset.open === "1";
+            header.dataset.open = open ? "0" : "1";
+
+            header.firstElementChild.textContent =
+                (open ? "▶ " : "▼ ") + `Year ${y}`;
+
+            document.querySelectorAll("." + yearId).forEach(r => {
+                r.style.display = open ? "none" : "table-row";
+            });
+        };
+
+        tbody.appendChild(header);
+
+        for (let m = 1; m <= 12; m++) {
+
+            let interest = balance * rate;
+            let principal = payment - interest;
+            balance -= principal;
+
+            let tax = interest * taxRate;
+            let net = payment - tax;
+
+            yearInterest += interest;
+            yearPrincipal += principal;
+            yearTax += tax;
+
+            let row = document.createElement("tr");
+            row.className = "month-row " + yearId;
+
+            row.innerHTML = `
+                <td>Month ${(y-1)*12 + m}</td>
+                <td>${payment.toFixed(2)}</td>
+                <td>${interest.toFixed(2)}</td>
+                <td>${principal.toFixed(2)}</td>
+                <td class="tax">${tax.toFixed(2)}</td>
+                <td class="net">${net.toFixed(2)}</td>
+                <td class="equity">${(loan - balance).toFixed(2)}</td>
+                <td>${balance.toFixed(2)}</td>
+            `;
+
+            tbody.appendChild(row);
+        }
+
+        document.getElementById("i"+y).innerText = yearInterest.toFixed(0);
+        document.getElementById("p"+y).innerText = yearPrincipal.toFixed(0);
+        document.getElementById("t"+y).innerText = yearTax.toFixed(0);
+        document.getElementById("n"+y).innerText =
+            (payment*12 - yearTax).toFixed(0);
+        document.getElementById("e"+y).innerText =
+            (loan - balance).toFixed(0);
+        document.getElementById("b"+y).innerText =
+            balance.toFixed(0);
+    }
+}
+
+</script>
+
+</body>
+</html>
