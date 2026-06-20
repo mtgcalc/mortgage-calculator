@@ -5,35 +5,53 @@
 <title>Mortgage Calculator</title>
 
 <style>
+html, body {
+    min-height: 100% !important;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     background: #f4f6f8;
     color: #1f2937;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
 }
 
 .container {
     max-width: 1100px;
     margin: 40px auto;
     padding: 20px;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
 }
 
 .card {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
     background: white;
     border-radius: 14px;
-    padding: 22px;
+    padding: 22px 22px 34px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-}
-
-h2 {
-    margin-top: 0;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
 }
 
 .inputs {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 14px;
-    margin-bottom: 15px;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .input-group {
@@ -84,22 +102,34 @@ button:hover {
     background: #1d4ed8;
 }
 
-.toolbar {
+.input-row {
     display: flex;
-    justify-content: flex-end;
+    flex-wrap: wrap;
     gap: 10px;
-    margin-bottom: 12px;
+    align-items: center;
+    min-width: 0;
+}
+
+.input-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.tax-group .input-row button {
+    margin-top: 0;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .table-wrapper {
-    max-width: 100%;
-    max-height: 62vh;
+    display: block !important;
+    width: 100% !important;
     border-radius: 14px;
     background: #ffffff;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
 }
 
 .table-wrapper::-webkit-scrollbar {
@@ -110,21 +140,45 @@ button:hover {
 table {
     width: 100%;
     margin-top: 0;
-    border-collapse: separate;
+    border-collapse: collapse;
     border-spacing: 0;
     font-size: 13px;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
-thead {
-    display: table-header-group;
+thead tr {
+    /* keep default table flow for row grouping */
+}
+
+/* force natural content growth for card and table wrapper */
+html,
+body,
+.container,
+.card,
+.table-wrapper,
+table,
+tbody,
+thead,
+tfoot,
+tr,
+th,
+td {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 thead th {
-    position: -webkit-sticky;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 11;
     background: #f9fafb;
+    background-clip: padding-box;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 th, td {
@@ -212,46 +266,43 @@ tfoot tr {
 <input type="number" id="years" value="30">
 </div>
 
-<div class="input-group">
+<div class="input-group tax-group">
 <label>Tax return (%)</label>
+<div class="input-row">
 <input type="number" id="taxRate" value="36.97" step="0.01">
+<button id="toggleAll" type="button">Expand All</button>
+</div>
 </div>
 
 </div>
 
-<div class="toolbar">
-    <button id="toggleAll">Expand All</button>
-</div>
-
-<div class="table-wrapper">
-<table>
-<thead>
-<tr>
-<th>Period</th>
-<th>Payment</th>
-<th>Interest</th>
-<th>Principal</th>
-<th>Tax Return</th>
-<th>Net</th>
-<th>Equity</th>
-<th>Remaining Principal</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-<tfoot>
-<tr>
-<th>Total</th>
-<td id="totalPayment"></td>
-<td id="totalInterest"></td>
-<td id="totalPrincipal"></td>
-<td id="totalTax"></td>
-<td id="totalNet"></td>
-<td id="totalEquity"></td>
-<td id="totalBalance"></td>
-</tr>
-</tfoot>
-</table>
-</div>
+        <table>
+            <thead>
+            <tr>
+                <th>Period</th>
+                <th>Payment</th>
+                <th>Interest</th>
+                <th>Principal</th>
+                <th>Tax Return</th>
+                <th>Net</th>
+                <th>Equity</th>
+                <th>Remaining Principal</th>
+            </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+            <tfoot>
+            <tr>
+                <th>Total</th>
+                <td id="totalPayment"></td>
+                <td id="totalInterest"></td>
+                <td id="totalPrincipal"></td>
+                <td id="totalTax"></td>
+                <td id="totalNet"></td>
+                <td id="totalEquity"></td>
+                <td id="totalBalance"></td>
+            </tr>
+            </tfoot>
+        </table>
 
 </div>
 </div>
