@@ -13,18 +13,18 @@ html, body {
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     margin: 0;
-    background: #f4f6f8;
-    color: #1f2937;
+    background: #eef3f7;
+    color: #111827;
     overflow-x: hidden !important;
     overflow-y: visible !important;
 }
 
 .container {
     max-width: 1100px;
-    margin: 40px auto;
-    padding: 20px;
+    margin: 0 auto 24px;
+    padding: 16px;
     overflow: visible !important;
     height: auto !important;
     min-height: 0 !important;
@@ -32,13 +32,14 @@ body {
 }
 
 .card {
-    display: block !important;
-    position: static !important;
-    width: auto !important;
-    background: white;
-    border-radius: 14px;
-    padding: 22px 22px 34px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    position: relative;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+    padding: 0 32px 32px;
     overflow: visible !important;
     height: auto !important;
     min-height: 0 !important;
@@ -47,10 +48,10 @@ body {
 
 .inputs {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
-    padding-bottom: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-bottom: 28px;
+    padding-bottom: 22px;
     border-bottom: 1px solid #e5e7eb;
 }
 
@@ -61,20 +62,33 @@ body {
 
 label {
     font-size: 12px;
-    color: #6b7280;
-    margin-bottom: 4px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 8px;
 }
 
 input {
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #d1d5db;
-    font-size: 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 15px;
+    color: #0f172a;
     outline: none;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+input:hover {
+    background: #f5f7fb;
 }
 
 input:focus {
-    border-color: #3b82f6;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+    background: #ffffff;
 }
 
 /* remove spinners */
@@ -89,17 +103,25 @@ input[type=number] {
 
 button {
     margin-top: 10px;
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: none;
+    padding: 12px 18px;
+    border-radius: 14px;
+    border: 1px solid transparent;
     background: #2563eb;
-    color: white;
-    font-weight: 600;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.01em;
     cursor: pointer;
+    transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
 }
 
 button:hover {
     background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+button:focus-visible {
+    outline: 2px solid rgba(37, 99, 235, 0.4);
+    outline-offset: 3px;
 }
 
 .input-row {
@@ -174,34 +196,43 @@ td {
 
 thead th {
     position: sticky;
-    top: 0;
-    z-index: 11;
-    background: #f9fafb;
+    top: 96px;
+    z-index: 12;
+    background: #f8fafc;
     background-clip: padding-box;
     border-bottom: 1px solid #e5e7eb;
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.04);
 }
 
 th, td {
-    padding: 10px 12px;
+    padding: 14px 16px;
     text-align: right;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+th {
+    background: #f8fafc;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+tbody tr:hover {
+    background: rgba(37, 99, 235, 0.04);
 }
 
 @media (max-width: 760px) {
     table {
-        font-size: 12px;
+        font-size: 13px;
     }
     th, td {
-        padding: 8px 10px;
+        padding: 10px 12px;
         text-align: left;
     }
     .year-row td {
         white-space: normal;
     }
-}
-
-th {
-    background: #f9fafb;
 }
 
 .toggle-icon {
@@ -235,9 +266,9 @@ tfoot tr {
     display: none;
 }
 
-.tax { color: #059669; }
-.net { color: #b45309; }
-.equity { color: #1d4ed8; }
+.tax { color: #0f766e; font-weight: 600; }
+.net { color: #92400e; font-weight: 600; }
+.equity { color: #1d4ed8; font-weight: 600; }
 
 </style>
 
@@ -245,37 +276,37 @@ tfoot tr {
 <body>
 
 <div class="container">
+<div style="display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; position:fixed; top:0; left:0; right:0; background:#ffffff; padding:0 28px 10px; border-bottom:1px solid rgba(15, 23, 42, 0.08); box-shadow:0 4px 12px rgba(15, 23, 42, 0.06); z-index:100; min-height:84px;">
+    <div style="display:flex; flex-direction:column; justify-content:center;">
+        <p style="margin:0;font-size:12px;font-weight:700;color:#475569;letter-spacing:0.08em;text-transform:uppercase;">Loan analysis</p>
+        <h2 style="margin:4px 0 0;font-size:28px;color:#0f172a;line-height:1.05;">Mortgage Calculator</h2>
+    </div>
+    <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; align-items:flex-end; min-width:0;">
+        <div style="flex:0 1 140px;">
+            <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Loan (€)</label>
+            <input type="number" id="loan" value="600000" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+        </div>
+        <div style="flex:0 1 120px;">
+            <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Interest (%)</label>
+            <input type="number" id="rate" value="4.17" step="0.01" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+        </div>
+        <div style="flex:0 1 100px;">
+            <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Years</label>
+            <input type="number" id="years" value="30" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+        </div>
+        <div style="flex:0 1 130px;">
+            <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Tax return (%)</label>
+            <input type="number" id="taxRate" value="36.97" step="0.01" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+        </div>
+    </div>
+    <div style="display:flex; justify-content:flex-end; align-items:flex-start;">
+        <button id="toggleAll" type="button" style="margin-top:0; height:38px;">Expand All</button>
+    </div>
+</div>
+
+<div style="height:96px;"></div>
+
 <div class="card">
-
-<h2>Mortgage Calculator</h2>
-
-<div class="inputs">
-
-<div class="input-group">
-<label>Loan (€)</label>
-<input type="number" id="loan" value="600000">
-</div>
-
-<div class="input-group">
-<label>Interest (%)</label>
-<input type="number" id="rate" value="4.17" step="0.01">
-</div>
-
-<div class="input-group">
-<label>Years</label>
-<input type="number" id="years" value="30">
-</div>
-
-<div class="input-group tax-group">
-<label>Tax return (%)</label>
-<div class="input-row">
-<input type="number" id="taxRate" value="36.97" step="0.01">
-<button id="toggleAll" type="button">Expand All</button>
-</div>
-</div>
-
-</div>
-
         <table>
             <thead>
             <tr>
@@ -378,6 +409,10 @@ function calculate() {
         tbody.appendChild(header);
 
         for (let m = 1; m <= 12; m++) {
+            if (balance <= 0) {
+                break;
+            }
+
             let interest = balance * rate;
             let principal = payment - interest;
             balance -= principal;
@@ -412,45 +447,65 @@ function calculate() {
             `;
 
             tbody.appendChild(row);
-        }
 
-        let extraPayment = Math.max(0, annualDownPayments[yearId] || 0);
-        if (extraPayment > 0) {
-            extraPayment = Math.min(extraPayment, balance);
-            balance -= extraPayment;
-        }
-
-        let extraRow = document.createElement("tr");
-        extraRow.className = "month-row downpayment-row " + yearId;
-        extraRow.style.display = isOpen ? "table-row" : "none";
-        extraRow.innerHTML = `
-            <td colspan="2">Extra Payment in Year ${y}:</td>
-            <td colspan="6"><input type="text" inputmode="numeric" pattern="[0-9]*" data-year="${yearId}" class="downpayment-input" value="${Math.round(extraPayment)}"></td>
-        `;
-        tbody.appendChild(extraRow);
-
-        const extraInput = extraRow.querySelector('input');
-        let pendingCalculateFrame = null;
-        extraInput.addEventListener('input', event => {
-            const rawValue = event.target.value.replace(/\D/g, '');
-            event.target.value = rawValue;
-            annualDownPayments[yearId] = rawValue ? parseInt(rawValue, 10) : 0;
-            if (pendingCalculateFrame !== null) {
-                cancelAnimationFrame(pendingCalculateFrame);
+                if (balance <= 0) {
+                break;
             }
-            pendingCalculateFrame = requestAnimationFrame(() => {
-                pendingCalculateFrame = null;
-                calculate();
-            });
-        });
-        if (focusedYear === yearId && focusedValue !== null) {
-            extraInput.value = focusedValue.replace(/\D/g, '');
-            window.requestAnimationFrame(() => {
-                extraInput.focus();
-                if (selectionStart !== null && selectionEnd !== null) {
-                    extraInput.setSelectionRange(selectionStart, selectionEnd);
+        }
+
+        if (balance > 0) {
+            let extraPayment = Math.max(0, annualDownPayments[yearId] || 0);
+            if (extraPayment > 0) {
+                extraPayment = Math.min(extraPayment, balance);
+                balance -= extraPayment;
+            }
+
+            let extraRow = document.createElement("tr");
+            extraRow.className = "month-row downpayment-row " + yearId;
+            extraRow.style.display = isOpen ? "table-row" : "none";
+            extraRow.innerHTML = `
+                <td colspan="2">Extra Repayment End Of Year ${y}:</td>
+                <td colspan="6"><input type="text" inputmode="numeric" pattern="[0-9]*" data-year="${yearId}" class="downpayment-input" value="${extraPayment > 0 ? Math.round(extraPayment) : ''}"></td>
+            `;
+            tbody.appendChild(extraRow);
+
+            const extraInput = extraRow.querySelector('input');
+            let pendingCalculateFrame = null;
+            extraInput.addEventListener('focus', event => {
+                if (event.target.value === '0') {
+                    event.target.value = '';
                 }
             });
+            extraInput.addEventListener('blur', event => {
+                if (event.target.value === '') {
+                    annualDownPayments[yearId] = 0;
+                }
+            });
+            extraInput.addEventListener('input', event => {
+                const rawValue = event.target.value.replace(/\D/g, '');
+                event.target.value = rawValue;
+                annualDownPayments[yearId] = rawValue ? parseInt(rawValue, 10) : 0;
+                if (pendingCalculateFrame !== null) {
+                    cancelAnimationFrame(pendingCalculateFrame);
+                }
+                pendingCalculateFrame = requestAnimationFrame(() => {
+                    pendingCalculateFrame = null;
+                    calculate();
+                });
+            });
+            if (focusedYear === yearId && focusedValue !== null) {
+                extraInput.value = focusedValue.replace(/\D/g, '');
+                window.requestAnimationFrame(() => {
+                    extraInput.focus();
+                    if (selectionStart !== null && selectionEnd !== null) {
+                        extraInput.setSelectionRange(selectionStart, selectionEnd);
+                    }
+                });
+            }
+        }
+
+        if (balance <= 0) {
+            break;
         }
 
         document.getElementById("i" + y).innerText = yearInterest.toFixed(0);
@@ -470,7 +525,9 @@ function updateTotals(payment, interest, principal, tax, net, equity, balance) {
     document.getElementById('totalPrincipal').innerText = principal.toFixed(2);
     document.getElementById('totalTax').innerText = tax.toFixed(2);
     document.getElementById('totalNet').innerText = net.toFixed(2);
-    document.getElementById('totalEquity').innerText = equity.toFixed(2);
+    // Show total equity as the original loan amount (not the sum of yearly equity)
+    const loanVal = +document.getElementById('loan').value || 0;
+    document.getElementById('totalEquity').innerText = loanVal.toFixed(2);
     document.getElementById('totalBalance').innerText = balance.toFixed(2);
 }
 
