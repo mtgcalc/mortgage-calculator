@@ -332,7 +332,7 @@ select {
                     <strong id="cardTotalSaved" class="saved">€0</strong>
                 </div>
                 <div class="summary-card" style="border-left: 4px solid var(--tax);">
-                    <span>Est. Tax Return (HRA)</span>
+                    <span>Estimated Tax Return</span>
                     <strong id="cardTotalTax" class="tax">€0</strong>
                 </div>
                 <div class="summary-card" style="border-left: 4px solid var(--net);">
@@ -355,7 +355,7 @@ select {
                             <th>Payment</th>
                             <th>Interest</th>
                             <th>Principal</th>
-                            <th>Tax Return</th>
+                            <th>Tax Return / Effective Rate</th>
                             <th>Net</th>
                             <th>Equity</th>
                             <th>Remaining</th>
@@ -591,7 +591,8 @@ function calculate() {
     const selectionEnd = activeElement instanceof HTMLInputElement ? activeElement.selectionEnd : null;
 
     let loan = +(document.getElementById("loan").value.replace(/\D/g, ''));
-    let rate = (parseFloat(document.getElementById("rate").value) || 0) / 100 / 12;
+    let nominalAnnualRate = parseFloat(document.getElementById("rate").value) || 0;
+    let rate = (nominalAnnualRate / 100) / 12;
     let years = Math.min(100, parseInt(document.getElementById("years").value, 10) || 0);
     let taxRate = (parseFloat(document.getElementById("taxRate").value) || 0) / 100;
     let strategy = document.getElementById("repayStrategy").value;
@@ -618,7 +619,6 @@ function calculate() {
 
     let chartLabels = ['Start'];
     let chartBalanceData = [loan];
-    /* FIXED: Explicitly set Equity point zero here to correct axis offsets across updates */
     let chartEquityData = [0];
 
     for (let y = 1; y <= years; y++) {
@@ -644,9 +644,12 @@ function calculate() {
         `;
         tbody.appendChild(header);
 
+        let monthlyRatesInYear = [];
+
         for (let m = 1; m <= 12; m++) {
             if (balance <= 0) break;
 
+            let balancePriorToMonth = balance;
             let interest = balance * rate;
             let principal = currentPayment - interest;
             let paymentAmount = currentPayment;
@@ -659,6 +662,13 @@ function calculate() {
 
             let tax = (y <= 30) ? (interest * taxRate) : 0;
             let net = paymentAmount - tax;
+
+            // Compute true monthly net effective interest rate
+            let monthlyEffectiveRate = nominalAnnualRate;
+            if (balancePriorToMonth > 0 && y <= 30) {
+                monthlyEffectiveRate = (interest * (1 - taxRate) / balancePriorToMonth) * 12 * 100;
+            }
+            monthlyRatesInYear.push(monthlyEffectiveRate);
 
             yearInterest += interest;
             yearPrincipal += principal;
@@ -674,12 +684,16 @@ function calculate() {
             let row = document.createElement("tr");
             row.className = "month-row " + yearId;
             row.style.display = isOpen ? "table-row" : "none";
+            
+            let taxValueString = formatNumber(tax, 2);
+            let taxCellContent = `${taxValueString} <span style="font-size:11px; font-weight:500; opacity:0.85;">(${formatNumber(monthlyEffectiveRate, 2)}% eff)</span>`;
+
             row.innerHTML = `
                 <td style="text-align:left;">Month ${(y - 1) * 12 + m}</td>
                 <td>${formatNumber(paymentAmount, 2)}</td>
                 <td>${formatNumber(interest, 2)}</td>
                 <td>${formatNumber(principal, 2)}</td>
-                <td class="tax">${formatNumber(tax, 2)}</td>
+                <td class="tax">${taxCellContent}</td>
                 <td class="net">${formatNumber(net, 2)}</td>
                 <td class="equity">${formatNumber(loan - balance, 2)}</td>
                 <td>${formatNumber(balance, 2)}</td>
@@ -768,10 +782,19 @@ function calculate() {
             });
         }
 
+        // Calculate annual effective rate as the true time-weighted average of active monthly rates
+        let annualEffectiveRate = nominalAnnualRate;
+        if (monthlyRatesInYear.length > 0 && y <= 30) {
+            let sumRates = monthlyRatesInYear.reduce((a, b) => a + b, 0);
+            annualEffectiveRate = sumRates / monthlyRatesInYear.length;
+        }
+        
+        let yearTaxDisplay = formatNumber(yearTax, 0) + ` <span style="font-size:11px; font-weight:500; opacity:0.85;">(${formatNumber(annualEffectiveRate, 2)}% eff)</span>`;
+
         document.getElementById("pay" + y).innerText = formatNumber(yearPayment, 0);
         document.getElementById("i" + y).innerText = formatNumber(yearInterest, 0);
         document.getElementById("p" + y).innerText = formatNumber(yearPrincipal, 0);
-        document.getElementById("t" + y).innerText = formatNumber(yearTax, 0);
+        document.getElementById("t" + y).innerHTML = yearTaxDisplay;
         document.getElementById("n" + y).innerText = formatNumber(yearNet, 0);
         document.getElementById("e" + y).innerText = formatNumber(loan - Math.max(0, balance), 0);
         document.getElementById("b" + y).innerText = formatNumber(Math.max(0, balance), 0);
