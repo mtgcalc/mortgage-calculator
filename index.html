@@ -274,35 +274,35 @@ tfoot tr {
 
 </head>
 <body>
-
-<div class="container">
 <div style="display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:16px; position:fixed; top:0; left:0; right:0; background:#ffffff; padding:0 28px 10px; border-bottom:1px solid rgba(15, 23, 42, 0.08); box-shadow:0 4px 12px rgba(15, 23, 42, 0.06); z-index:100; min-height:84px;">
     <div style="display:flex; flex-direction:column; justify-content:center;">
         <p style="margin:0;font-size:12px;font-weight:700;color:#475569;letter-spacing:0.08em;text-transform:uppercase;">Loan analysis</p>
         <h2 style="margin:4px 0 0;font-size:28px;color:#0f172a;line-height:1.05;">Mortgage Calculator</h2>
     </div>
-    <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; align-items:flex-end; min-width:0;">
-        <div style="flex:0 1 140px;">
+    <!-- FIXED GRID CONTAINER BELOW -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:12px; align-items:flex-end; min-width:0; width:100%; max-width:640px; margin:0 auto;">
+        <div style="width:100%; min-width:0;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Loan (€)</label>
-            <input type="text" inputmode="numeric" id="loan" value="600.000" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+            <input type="text" inputmode="numeric" id="loan" value="600.000" style="width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
         </div>
-        <div style="flex:0 1 120px;">
+        <div style="width:100%; min-width:0;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Interest (%)</label>
-            <input type="number" id="rate" value="4.17" step="0.01" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+            <input type="number" id="rate" value="4.17" step="0.01" style="width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
         </div>
-        <div style="flex:0 1 100px;">
+        <div style="width:100%; min-width:0;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Years</label>
-            <input type="number" id="years" value="30" max="100" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+            <input type="number" id="years" value="30" max="100" style="width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
         </div>
-        <div style="flex:0 1 130px;">
+        <div style="width:100%; min-width:0;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Tax return (%)</label>
-            <input type="number" id="taxRate" value="36.97" step="0.01" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+            <input type="number" id="taxRate" value="36.97" step="0.01" style="width:100%; box-sizing:border-box; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
         </div>
     </div>
     <div style="display:flex; justify-content:flex-end; align-items:flex-start;">
         <button id="toggleAll" type="button" style="margin-top:0; height:38px;">Expand All</button>
     </div>
 </div>
+
 
 <div style="height:96px;"></div>
 
