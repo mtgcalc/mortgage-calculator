@@ -394,7 +394,7 @@ function calculateInterestSavings(initialLoan, monthlyRate, monthlyPayment) {
                 const interestSaved = interestWithoutExtra - interestWithExtra;
                 
                 if (interestSaved > 0) {
-                    savingsElement.innerText = `Interest Saves: ${formatNumber(interestSaved, 0)}`;
+                    savingsElement.innerText = `Saved Interest: ${formatNumber(interestSaved, 0)}`;
                 } else {
                     savingsElement.innerText = '';
                 }
