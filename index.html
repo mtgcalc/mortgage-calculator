@@ -448,7 +448,7 @@ function calculate() {
     tbody.innerHTML = "";
 
     for (let y = 1; y <= years; y++) {
-        let yearInterest = 0, yearPrincipal = 0, yearTax = 0;
+        let yearInterest = 0, yearPrincipal = 0, yearTax = 0, yearNet = 0, yearPayment = 0, yearEquity = 0;
         let yearId = "y" + y;
 
         let isOpen = allYearsExpanded || yearOpenStates[yearId] === true;
@@ -459,7 +459,7 @@ function calculate() {
 
         header.innerHTML = `
             <td><span class="toggle-icon">${isOpen ? '▾' : '▸'}</span>Year ${y}</td>
-            <td>${formatNumber(payment * 12, 0)}</td>
+            <td id="pay${y}">${formatNumber(payment * 12, 0)}</td>
             <td id="i${y}"></td>
             <td id="p${y}"></td>
             <td id="t${y}" class="tax"></td>
@@ -482,21 +482,29 @@ function calculate() {
 
             let interest = balance * rate;
             let principal = payment - interest;
+            let paymentAmount = payment;
+            if (principal > balance) {
+                principal = balance;
+                paymentAmount = interest + principal;
+            }
             balance -= principal;
 
             let tax = interest * taxRate;
-            let net = payment - tax;
+            let net = paymentAmount - tax;
 
             yearInterest += interest;
             yearPrincipal += principal;
             yearTax += tax;
+            yearNet += net;
+            yearPayment += paymentAmount;
+            yearEquity += principal;
 
-            totalPayment += payment;
+            totalPayment += paymentAmount;
             totalInterest += interest;
             totalPrincipal += principal;
             totalTax += tax;
             totalNet += net;
-            totalEquity += (loan - balance);
+            totalEquity += principal;
 
             let row = document.createElement("tr");
             row.className = "month-row " + yearId;
@@ -504,7 +512,7 @@ function calculate() {
 
             row.innerHTML = `
                 <td>Month ${(y - 1) * 12 + m}</td>
-                <td>${formatNumber(payment, 2)}</td>
+                <td>${formatNumber(paymentAmount, 2)}</td>
                 <td>${formatNumber(interest, 2)}</td>
                 <td>${formatNumber(principal, 2)}</td>
                 <td class="tax">${formatNumber(tax, 2)}</td>
@@ -525,6 +533,12 @@ function calculate() {
             if (extraPayment > 0) {
                 extraPayment = Math.min(extraPayment, balance);
                 balance -= extraPayment;
+                yearPayment += extraPayment;
+                yearPrincipal += extraPayment;
+                yearEquity += extraPayment;
+                totalPayment += extraPayment;
+                totalPrincipal += extraPayment;
+                totalEquity += extraPayment;
             }
 
             let extraRow = document.createElement("tr");
@@ -600,16 +614,18 @@ function calculate() {
             }
         }
 
-        if (balance <= 0) {
-            break;
-        }
-
         document.getElementById("i" + y).innerText = formatNumber(yearInterest, 0);
         document.getElementById("p" + y).innerText = formatNumber(yearPrincipal, 0);
         document.getElementById("t" + y).innerText = formatNumber(yearTax, 0);
-        document.getElementById("n" + y).innerText = formatNumber(payment * 12 - yearTax, 0);
-        document.getElementById("e" + y).innerText = formatNumber(loan - balance, 0);
-        document.getElementById("b" + y).innerText = formatNumber(balance, 0);
+        document.getElementById("n" + y).innerText = formatNumber(yearNet, 0);
+        document.getElementById("e" + y).innerText = formatNumber(yearEquity, 0);
+        document.getElementById("b" + y).innerText = formatNumber(Math.max(0, balance), 0);
+        document.getElementById("pay" + y).innerText = formatNumber(yearPayment, 0);
+
+        if (balance <= 0) {
+            balance = 0;
+            break;
+        }
     }
 
     updateTotals(totalPayment, totalInterest, totalPrincipal, totalTax, totalNet, totalEquity, balance);
