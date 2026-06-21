@@ -244,7 +244,7 @@ tbody tr:hover {
 }
 
 .downpayment-row input {
-    width: 100%;
+    width: 140px;
     padding: 8px;
     border-radius: 10px;
     border: 1px solid #d1d5db;
@@ -284,7 +284,7 @@ tfoot tr {
     <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; align-items:flex-end; min-width:0;">
         <div style="flex:0 1 140px;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Loan (€)</label>
-            <input type="number" id="loan" value="600000" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+            <input type="text" inputmode="numeric" id="loan" value="600.000" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
         </div>
         <div style="flex:0 1 120px;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Interest (%)</label>
@@ -292,7 +292,7 @@ tfoot tr {
         </div>
         <div style="flex:0 1 100px;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Years</label>
-            <input type="number" id="years" value="30" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
+            <input type="number" id="years" value="30" max="100" style="width:100%; padding:10px 12px; border-radius:12px; border:1px solid #cbd5e1; background:#f8fafc; font-family:Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size:13px; color:#0f172a;">
         </div>
         <div style="flex:0 1 130px;">
             <label style="display:block; font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:#475569; margin-bottom:6px;">Tax return (%)</label>
@@ -340,6 +340,73 @@ tfoot tr {
 
 <script>
 
+function formatNumber(num, decimals = 2) {
+    const fixed = num.toFixed(decimals);
+    const parts = fixed.split('.');
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decPart = parts[1] || '';
+    
+    // Don't show comma if no decimals requested or all decimals are 0
+    if (!decPart || decPart === '0'.repeat(decimals)) {
+        return intPart;
+    }
+    return intPart + ',' + decPart;
+}
+
+// Helper function to calculate remaining interest from a given balance
+function calculateRemainingInterest(balance, monthlyPayment, monthlyRate, monthsRemaining) {
+    let tempBalance = balance;
+    let totalInterest = 0;
+    for (let m = 0; m < monthsRemaining; m++) {
+        if (tempBalance <= 0) break;
+        let interest = tempBalance * monthlyRate;
+        let principal = monthlyPayment - interest;
+        tempBalance -= principal;
+        totalInterest += interest;
+    }
+    return totalInterest;
+}
+
+// Calculate and display interest savings for each extra payment
+function calculateInterestSavings(initialLoan, monthlyRate, monthlyPayment) {
+    let balance = initialLoan;
+    
+    // Simulate through the loan to match up with the table
+    for (let y = 1; y <= 100; y++) {
+        let yearId = "y" + y;
+        
+        for (let m = 1; m <= 12; m++) {
+            if (balance <= 0) break;
+            let interest = balance * monthlyRate;
+            let principal = monthlyPayment - interest;
+            balance -= principal;
+        }
+        
+        // Calculate interest savings for this year's extra payment
+        const savingsElement = document.getElementById("savings" + yearId);
+        if (savingsElement && balance > 0) {
+            const extraPaymentAmount = annualDownPayments[yearId] || 0;
+            if (extraPaymentAmount > 0) {
+                // Calculate interest that would be saved
+                const monthsRemaining = Math.ceil(balance / monthlyPayment) + 120; // Add buffer
+                const interestWithoutExtra = calculateRemainingInterest(balance, monthlyPayment, monthlyRate, monthsRemaining);
+                const interestWithExtra = calculateRemainingInterest(Math.max(0, balance - extraPaymentAmount), monthlyPayment, monthlyRate, monthsRemaining);
+                const interestSaved = interestWithoutExtra - interestWithExtra;
+                
+                if (interestSaved > 0) {
+                    savingsElement.innerText = `Interest Saves: ${formatNumber(interestSaved, 0)}`;
+                } else {
+                    savingsElement.innerText = '';
+                }
+            } else {
+                savingsElement.innerText = '';
+            }
+        }
+        
+        if (balance <= 0) break;
+    }
+}
+
 let allYearsExpanded = false;
 let yearOpenStates = {};
 let annualDownPayments = {};
@@ -355,7 +422,7 @@ function calculate() {
     const selectionStart = activeElement instanceof HTMLInputElement ? activeElement.selectionStart : null;
     const selectionEnd = activeElement instanceof HTMLInputElement ? activeElement.selectionEnd : null;
 
-    let loan = +document.getElementById("loan").value;
+    let loan = +(document.getElementById("loan").value.replace(/\D/g, ''));
     let rate = (+document.getElementById("rate").value) / 100 / 12;
     let years = +document.getElementById("years").value;
     let taxRate = (+document.getElementById("taxRate").value) / 100;
@@ -392,7 +459,7 @@ function calculate() {
 
         header.innerHTML = `
             <td><span class="toggle-icon">${isOpen ? '▾' : '▸'}</span>Year ${y}</td>
-            <td>${(payment * 12).toFixed(0)}</td>
+            <td>${formatNumber(payment * 12, 0)}</td>
             <td id="i${y}"></td>
             <td id="p${y}"></td>
             <td id="t${y}" class="tax"></td>
@@ -437,13 +504,13 @@ function calculate() {
 
             row.innerHTML = `
                 <td>Month ${(y - 1) * 12 + m}</td>
-                <td>${payment.toFixed(2)}</td>
-                <td>${interest.toFixed(2)}</td>
-                <td>${principal.toFixed(2)}</td>
-                <td class="tax">${tax.toFixed(2)}</td>
-                <td class="net">${net.toFixed(2)}</td>
-                <td class="equity">${(loan - balance).toFixed(2)}</td>
-                <td>${balance.toFixed(2)}</td>
+                <td>${formatNumber(payment, 2)}</td>
+                <td>${formatNumber(interest, 2)}</td>
+                <td>${formatNumber(principal, 2)}</td>
+                <td class="tax">${formatNumber(tax, 2)}</td>
+                <td class="net">${formatNumber(net, 2)}</td>
+                <td class="equity">${formatNumber(loan - balance, 2)}</td>
+                <td>${formatNumber(balance, 2)}</td>
             `;
 
             tbody.appendChild(row);
@@ -465,7 +532,9 @@ function calculate() {
             extraRow.style.display = isOpen ? "table-row" : "none";
             extraRow.innerHTML = `
                 <td colspan="2">Extra Repayment End Of Year ${y}:</td>
-                <td colspan="6"><input type="text" inputmode="numeric" pattern="[0-9]*" data-year="${yearId}" class="downpayment-input" value="${extraPayment > 0 ? Math.round(extraPayment) : ''}"></td>
+                <td colspan="2"><input type="text" inputmode="numeric" pattern="[0-9]*" data-year="${yearId}" class="downpayment-input" value="${extraPayment > 0 ? formatNumber(Math.round(extraPayment), 0) : ''}" style="text-align:right;"></td>
+                <td colspan="1" style="padding-left:8px; white-space:nowrap; color:#6b7280;">€</td>
+                <td colspan="3" id="savings${yearId}" style="color: #059669; font-weight: 600; text-align:left; padding-left:8px;"></td>
             `;
             tbody.appendChild(extraRow);
 
@@ -482,8 +551,34 @@ function calculate() {
                 }
             });
             extraInput.addEventListener('input', event => {
+                // Track cursor position in terms of digit count (not string position)
+                const cursorPos = event.target.selectionStart;
+                const oldValue = event.target.value;
+                let digitsBefore = 0;
+                for (let i = 0; i < cursorPos && i < oldValue.length; i++) {
+                    if (/\d/.test(oldValue[i])) digitsBefore++;
+                }
+                
+                // Extract raw digits and format
                 const rawValue = event.target.value.replace(/\D/g, '');
-                event.target.value = rawValue;
+                const formatted = formatNumber(parseInt(rawValue || 0, 10), 0);
+                event.target.value = formatted;
+                
+                // Restore cursor position intelligently
+                let newCursorPos = 0;
+                let digitsFound = 0;
+                for (let i = 0; i < formatted.length; i++) {
+                    if (/\d/.test(formatted[i])) {
+                        digitsFound++;
+                        if (digitsFound === digitsBefore) {
+                            newCursorPos = i + 1;
+                            break;
+                        }
+                    }
+                }
+                if (newCursorPos === 0) newCursorPos = formatted.length;
+                event.target.setSelectionRange(newCursorPos, newCursorPos);
+                
                 annualDownPayments[yearId] = rawValue ? parseInt(rawValue, 10) : 0;
                 if (pendingCalculateFrame !== null) {
                     cancelAnimationFrame(pendingCalculateFrame);
@@ -494,7 +589,8 @@ function calculate() {
                 });
             });
             if (focusedYear === yearId && focusedValue !== null) {
-                extraInput.value = focusedValue.replace(/\D/g, '');
+                const rawVal = focusedValue.replace(/\D/g, '');
+                extraInput.value = formatNumber(parseInt(rawVal, 10), 0);
                 window.requestAnimationFrame(() => {
                     extraInput.focus();
                     if (selectionStart !== null && selectionEnd !== null) {
@@ -508,27 +604,30 @@ function calculate() {
             break;
         }
 
-        document.getElementById("i" + y).innerText = yearInterest.toFixed(0);
-        document.getElementById("p" + y).innerText = yearPrincipal.toFixed(0);
-        document.getElementById("t" + y).innerText = yearTax.toFixed(0);
-        document.getElementById("n" + y).innerText = (payment * 12 - yearTax).toFixed(0);
-        document.getElementById("e" + y).innerText = (loan - balance).toFixed(0);
-        document.getElementById("b" + y).innerText = balance.toFixed(0);
+        document.getElementById("i" + y).innerText = formatNumber(yearInterest, 0);
+        document.getElementById("p" + y).innerText = formatNumber(yearPrincipal, 0);
+        document.getElementById("t" + y).innerText = formatNumber(yearTax, 0);
+        document.getElementById("n" + y).innerText = formatNumber(payment * 12 - yearTax, 0);
+        document.getElementById("e" + y).innerText = formatNumber(loan - balance, 0);
+        document.getElementById("b" + y).innerText = formatNumber(balance, 0);
     }
 
     updateTotals(totalPayment, totalInterest, totalPrincipal, totalTax, totalNet, totalEquity, balance);
+    
+    // Calculate and display interest savings for each extra payment
+    calculateInterestSavings(loan, rate, payment);
 }
 
 function updateTotals(payment, interest, principal, tax, net, equity, balance) {
-    document.getElementById('totalPayment').innerText = payment.toFixed(2);
-    document.getElementById('totalInterest').innerText = interest.toFixed(2);
-    document.getElementById('totalPrincipal').innerText = principal.toFixed(2);
-    document.getElementById('totalTax').innerText = tax.toFixed(2);
-    document.getElementById('totalNet').innerText = net.toFixed(2);
+    document.getElementById('totalPayment').innerText = formatNumber(payment, 2);
+    document.getElementById('totalInterest').innerText = formatNumber(interest, 2);
+    document.getElementById('totalPrincipal').innerText = formatNumber(principal, 2);
+    document.getElementById('totalTax').innerText = formatNumber(tax, 2);
+    document.getElementById('totalNet').innerText = formatNumber(net, 2);
     // Show total equity as the original loan amount (not the sum of yearly equity)
-    const loanVal = +document.getElementById('loan').value || 0;
-    document.getElementById('totalEquity').innerText = loanVal.toFixed(2);
-    document.getElementById('totalBalance').innerText = balance.toFixed(2);
+    const loanVal = +(document.getElementById('loan').value.replace(/\D/g, '')) || 0;
+    document.getElementById('totalEquity').innerText = formatNumber(loanVal, 2);
+    document.getElementById('totalBalance').innerText = formatNumber(balance, 2);
 }
 
 function setYearOpen(header, open) {
@@ -560,9 +659,54 @@ function toggleAllYears() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('#loan, #rate, #years, #taxRate').forEach(input => {
+    const loanInput = document.getElementById('loan');
+    
+    // Format loan input with European notation
+    loanInput.addEventListener('input', event => {
+        const cursorPos = event.target.selectionStart;
+        const oldValue = event.target.value;
+        let digitsBefore = 0;
+        for (let i = 0; i < cursorPos && i < oldValue.length; i++) {
+            if (/\d/.test(oldValue[i])) digitsBefore++;
+        }
+        
+        // Extract raw digits and format
+        const rawValue = event.target.value.replace(/\D/g, '');
+        const formatted = formatNumber(parseInt(rawValue || 0, 10), 0);
+        event.target.value = formatted;
+        
+        // Restore cursor position intelligently
+        let newCursorPos = 0;
+        let digitsFound = 0;
+        for (let i = 0; i < formatted.length; i++) {
+            if (/\d/.test(formatted[i])) {
+                digitsFound++;
+                if (digitsFound === digitsBefore) {
+                    newCursorPos = i + 1;
+                    break;
+                }
+            }
+        }
+        if (newCursorPos === 0) newCursorPos = formatted.length;
+        event.target.setSelectionRange(newCursorPos, newCursorPos);
+        
+        // Trigger calculate with the raw numeric value for calculations
+        calculate();
+    });
+    
+    document.querySelectorAll('#rate, #years, #taxRate').forEach(input => {
         input.addEventListener('input', calculate);
     });
+    
+    // Enforce maximum years limit
+    document.getElementById('years').addEventListener('change', event => {
+        let value = parseInt(event.target.value, 10);
+        if (value > 100) {
+            event.target.value = 100;
+            calculate();
+        }
+    });
+    
     document.getElementById('toggleAll').addEventListener('click', toggleAllYears);
     calculate();
 });
